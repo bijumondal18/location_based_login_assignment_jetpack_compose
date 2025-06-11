@@ -57,7 +57,7 @@ The core application logic, including the office location and perimeter, is defi
 * **Office Location:**
     ```kotlin
     // utils/Constants.kt
-    val OFFICE_LATLNG = LatLng(28.7041, 77.1025) // Example: Delhi coordinates
+    val OFFICE_LATLNG = LatLng(22.6990, 88.6885) // Example: Berachampa coordinates
     const val OFFICE_PERIMETER_METERS = 80.0 // 80 meters radius
     ```
     You can change `OFFICE_LATLNG` to your desired office coordinates and adjust `OFFICE_PERIMETER_METERS` to set the login radius.
