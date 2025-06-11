@@ -18,6 +18,8 @@ import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.app.locationbasedlogin.ui.navigation.AppNavGraph
@@ -25,14 +27,17 @@ import com.app.locationbasedlogin.ui.screens.login.LoginViewModel
 import com.app.locationbasedlogin.ui.theme.LocationBasedLoginTheme
 import com.app.locationbasedlogin.utils.PermissionUtils
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.app.locationbasedlogin.ui.screens.dashboard.DashboardScreen
+import com.app.locationbasedlogin.ui.screens.login.LoginScreen
 
 
 private const val TAG = "MainActivity"
-
 class MainActivity : ComponentActivity() {
-
     // Single ActivityResultLauncher for all location permissions
-    private lateinit var requestLocationPermissionsLauncher: ActivityResultLauncher<Array<String>>
+    private lateinit var requestLocationPermissionsLauncher: androidx.activity.result.ActivityResultLauncher<Array<String>>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,29 +48,18 @@ class MainActivity : ComponentActivity() {
             ActivityResultContracts.RequestMultiplePermissions()
         ) { permissions ->
             val fineLocationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
-            val coarseLocationGranted =
-                permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+            val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
             val backgroundLocationGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 permissions[Manifest.permission.ACCESS_BACKGROUND_LOCATION] ?: false
             } else true // Background location not relevant below Android 10
 
-            val allGranted =
-                PermissionUtils.hasAllRequiredPermissions(this) // Re-check all after result
+            val allGranted = PermissionUtils.hasAllRequiredPermissions(this) // Re-check all after result
 
             if (allGranted) {
                 Log.d(TAG, "All required location permissions granted.")
-                // Using View-based Snackbar for quick feedback.
-                // In a pure Compose app, you'd use Scaffold + SnackbarHostState.
             } else {
-                Log.w(
-                    TAG,
-                    "Not all required location permissions granted. Fine: $fineLocationGranted, Coarse: $coarseLocationGranted, Background: $backgroundLocationGranted"
-                )
+                Log.w(TAG, "Not all required location permissions granted. Fine: $fineLocationGranted, Coarse: $coarseLocationGranted, Background: $backgroundLocationGranted")
             }
-            // Trigger the ViewModel to re-check permissions, which will update the UI
-            // We can't directly call checkPermissions on a specific ViewModel instance here
-            // because the ViewModel is created within the Composable scope.
-            // This re-check will be handled by the LoginViewModel's onResume observer.
         }
 
         setContent {
@@ -80,7 +74,7 @@ class MainActivity : ComponentActivity() {
                             requestLocationPermissionsLauncher.launch(
                                 PermissionUtils.requiredPermissions.toTypedArray()
                             )
-                        },
+                        }
                     )
                 }
             }

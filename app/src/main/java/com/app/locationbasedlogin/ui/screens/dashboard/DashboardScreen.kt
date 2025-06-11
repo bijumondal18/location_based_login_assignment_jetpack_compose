@@ -9,8 +9,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -19,50 +24,79 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.app.locationbasedlogin.ui.components.CustomButton
 import com.app.locationbasedlogin.ui.theme.LocationBasedLoginTheme
+import com.app.locationbasedlogin.ui.theme.Success
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
     viewModel: DashboardViewModel = viewModel(), // Default for preview
     isLoading: Boolean,
     onLogoutClick: () -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = "Welcome to your Dashboard!",
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
-        )
-        Spacer(modifier = Modifier.height(32.dp))
 
-        if (isLoading) {
-            androidx.compose.material3.CircularProgressIndicator(modifier = Modifier.size(48.dp))
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(text = "Logging out...", fontSize = 18.sp)
-        } else {
-            Text(
-                text = "You are successfully logged in.",
-                fontSize = 18.sp,
-                modifier = Modifier.padding(bottom = 32.dp)
-            )
-
-            Button(
-                onClick = onLogoutClick,
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Dashboard", style = MaterialTheme.typography.titleLarge) })
+        },
+        content = {
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(46.dp)
+                    .fillMaxSize()
+                    .padding(it),
             ) {
-                Text("Logout", fontSize = 18.sp)
+
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ) {
+                        Text(
+                            text = "Welcome to your Dashboard!",
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                        HorizontalDivider(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.dp)
+                        )
+                        Text(
+                            text = "You are successfully logged in.",
+                            style = MaterialTheme.typography.titleMedium.copy(color = Success)
+                        )
+                    }
+                }
+
+                if (isLoading) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    androidx.compose.material3.CircularProgressIndicator(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .align(Alignment.CenterHorizontally)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(text = "Logging out...", fontSize = 18.sp)
+                } else {
+                    CustomButton(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 32.dp),
+                        text = "Logout",
+                        onClick = onLogoutClick,
+                    )
+                }
+
             }
         }
-    }
+    )
+
 }
 
 @androidx.compose.ui.tooling.preview.Preview(showBackground = true)
