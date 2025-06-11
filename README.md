@@ -33,14 +33,13 @@ Before you begin, ensure you have the following installed:
 
 1.  **Clone the Repository:**
     ```bash
-    git clone [https://github.com/your-username/location-based-login-app.git](https://github.com/your-username/location-based-login-app.git)
-    cd location-based-login-app
+    git clone [https://github.com/bijumondal18/location_based_login_assignment_jetpack_compose.git](https://github.com/bijumondal18/location_based_login_assignment_jetpack_compose.git)
+    cd location_based_login_assignment_jetpack_compose
     ```
-    *(Replace `your-username` and `location-based-login-app` with your actual GitHub details.)*
 
 2.  **Open in Android Studio:**
     * Launch Android Studio.
-    * Select `File` > `Open...` and navigate to the cloned `location-based-login-app` directory.
+    * Select `File` > `Open...` and navigate to the cloned `location_based_login_assignment_jetpack_compose` directory.
 
 3.  **Sync Gradle Project:**
     * Android Studio will automatically prompt you to sync the Gradle project. If not, click on the "Sync Project with Gradle Files" button in the toolbar (usually a small elephant icon).
@@ -59,15 +58,15 @@ The core application logic, including the office location and perimeter, is defi
     ```kotlin
     // utils/Constants.kt
     val OFFICE_LATLNG = LatLng(28.7041, 77.1025) // Example: Delhi coordinates
-    const val OFFICE_PERIMETER_METERS = 500.0 // 500 meters radius
+    const val OFFICE_PERIMETER_METERS = 80.0 // 80 meters radius
     ```
     You can change `OFFICE_LATLNG` to your desired office coordinates and adjust `OFFICE_PERIMETER_METERS` to set the login radius.
 
 * **Location Update Intervals:**
     ```kotlin
     // utils/Constants.kt
-    const val LOCATION_UPDATE_INTERVAL_MS = 5000L // UI updates every 5 seconds
-    const val FASTEST_LOCATION_UPDATE_INTERVAL_MS = 3000L // Fastest interval for updates
+    const val LOCATION_UPDATE_INTERVAL_MS = 10000L // UI updates every 10 seconds
+    const val FASTEST_LOCATION_UPDATE_INTERVAL_MS = 5000L // Fastest interval for updates every 5 seconds
     ```
     These control how frequently the app requests and displays location updates.
 
