@@ -17,6 +17,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -51,10 +52,13 @@ fun AppNavGraph(
     val isLoggedIn by authRepository.isLoggedIn.collectAsState(initial = true) // Assume true initially to avoid flicker
 
     // Check if location services are enabled (can be disabled externally)
-    val locationManager = remember { context.getSystemService(Context.LOCATION_SERVICE) as android.location.LocationManager }
+    val locationManager =
+        remember { context.getSystemService(Context.LOCATION_SERVICE) as android.location.LocationManager }
     var areLocationServicesEnabled by remember {
-        mutableStateOf(locationManager.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER) ||
-                locationManager.isProviderEnabled(android.location.LocationManager.NETWORK_PROVIDER))
+        mutableStateOf(
+            locationManager.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER) ||
+                    locationManager.isProviderEnabled(android.location.LocationManager.NETWORK_PROVIDER)
+        )
     }
 
     // Lifecycle observer to re-check location services status when app comes to foreground
@@ -62,8 +66,9 @@ fun AppNavGraph(
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-                areLocationServicesEnabled = locationManager.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER) ||
-                        locationManager.isProviderEnabled(android.location.LocationManager.NETWORK_PROVIDER)
+                areLocationServicesEnabled =
+                    locationManager.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER) ||
+                            locationManager.isProviderEnabled(android.location.LocationManager.NETWORK_PROVIDER)
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -91,8 +96,13 @@ fun AppNavGraph(
     if (showAutoLogoutDialog) {
         AlertDialog(
             onDismissRequest = { showAutoLogoutDialog = false },
-            title = { Text("Logged Out Automatically") },
-            text = { Text("You have been logged out because location services were disabled or necessary permissions were revoked.") },
+            title = { Text("Logged Out Automatically", fontSize = 22.sp) },
+            text = {
+                Text(
+                    "You have been logged out because location services were disabled or necessary permissions were revoked.",
+                    fontSize = 16.sp
+                )
+            },
             confirmButton = {
                 Button(onClick = {
                     showAutoLogoutDialog = false
@@ -122,12 +132,15 @@ fun AppNavGraph(
                             popUpTo("splash") { inclusive = true }
                         }
                     }
+
                     SplashNavTarget.Dashboard -> {
                         navController.navigate("dashboard") {
                             popUpTo("splash") { inclusive = true }
                         }
                     }
-                    SplashNavTarget.Loading -> { /* Do nothing, splash is showing */ }
+
+                    SplashNavTarget.Loading -> { /* Do nothing, splash is showing */
+                    }
                 }
             }
         }
@@ -185,7 +198,9 @@ fun AppNavGraph(
 
             if (showPermissionRationaleDialog) {
                 AlertDialog(
-                    onDismissRequest = { showPermissionRationaleDialog = false; loginViewModel.dismissLoginMessage() },
+                    onDismissRequest = {
+                        showPermissionRationaleDialog = false; loginViewModel.dismissLoginMessage()
+                    },
                     title = { Text("Permissions Required") },
                     text = { Text("This app requires foreground and background location permissions to function correctly for login and continuous monitoring.") },
                     confirmButton = {
@@ -212,7 +227,9 @@ fun AppNavGraph(
 
             if (showLocationSettingsDialog) {
                 AlertDialog(
-                    onDismissRequest = { showLocationSettingsDialog = false; loginViewModel.dismissLoginMessage() },
+                    onDismissRequest = {
+                        showLocationSettingsDialog = false; loginViewModel.dismissLoginMessage()
+                    },
                     title = { Text("Location Services Disabled") },
                     text = { Text("Please enable location services in your device settings to use this app.") },
                     confirmButton = {

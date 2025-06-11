@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -54,9 +55,11 @@ fun DashboardScreen(
 
             Button(
                 onClick = onLogoutClick,
-                modifier = Modifier.height(56.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(46.dp)
             ) {
-                Text("Logout", fontSize = 20.sp)
+                Text("Logout", fontSize = 18.sp)
             }
         }
     }

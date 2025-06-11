@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -53,10 +54,13 @@ fun LoginScreen(
     val context = LocalContext.current
     val currentLocation by viewModel.currentLocation.collectAsState()
 
-    val locationManager = remember { context.getSystemService(Context.LOCATION_SERVICE) as LocationManager }
+    val locationManager =
+        remember { context.getSystemService(Context.LOCATION_SERVICE) as LocationManager }
     var areLocationServicesEnabled by remember {
-        mutableStateOf(locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
-                locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER))
+        mutableStateOf(
+            locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
+                    locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+        )
     }
 
     // Re-check location services status and permissions when app resumes
@@ -64,8 +68,9 @@ fun LoginScreen(
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-                areLocationServicesEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
-                        locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+                areLocationServicesEnabled =
+                    locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
+                            locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
                 viewModel.checkPermissions() // Re-check permissions on resume
             }
         }
@@ -121,7 +126,11 @@ fun LoginScreen(
             )
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
                 Text(
-                    text = "Background Location: ${PermissionUtils.hasBackgroundLocationPermission(context)}",
+                    text = "Background Location: ${
+                        PermissionUtils.hasBackgroundLocationPermission(
+                            context
+                        )
+                    }",
                     fontSize = 14.sp,
                     color = if (PermissionUtils.hasBackgroundLocationPermission(context)) Color.Green else Color.Red
                 )
@@ -144,7 +153,12 @@ fun LoginScreen(
                 fontWeight = FontWeight.SemiBold
             )
             Text(
-                text = "Lat: ${String.format("%.4f", Constants.OFFICE_LATLNG.latitude)}, Lon: ${String.format("%.4f", Constants.OFFICE_LATLNG.longitude)}",
+                text = "Lat: ${
+                    String.format(
+                        "%.4f",
+                        Constants.OFFICE_LATLNG.latitude
+                    )
+                }, Lon: ${String.format("%.4f", Constants.OFFICE_LATLNG.longitude)}",
                 fontSize = 14.sp,
                 modifier = Modifier.padding(bottom = 8.dp)
             )
@@ -157,17 +171,28 @@ fun LoginScreen(
             when {
                 currentLocation != null -> {
                     Text(
-                        text = "Lat: ${String.format("%.4f", currentLocation!!.latitude)}, Lon: ${String.format("%.4f", currentLocation!!.longitude)}",
+                        text = "Lat: ${
+                            String.format(
+                                "%.4f",
+                                currentLocation!!.latitude
+                            )
+                        }, Lon: ${String.format("%.4f", currentLocation!!.longitude)}",
                         fontSize = 14.sp
                     )
                     Spacer(Modifier.height(32.dp))
 
                     Text(
-                        text = "Distance from office: ${if (distance >= 0) String.format("%.2f", distance) + "m" else "Calculating..."}",
+                        text = "Distance from office: ${
+                            if (distance >= 0) String.format(
+                                "%.2f",
+                                distance
+                            ) + "m" else "Calculating..."
+                        }",
                         fontSize = 14.sp,
                         color = Color.Black
                     )
                 }
+
                 !hasRequiredPermissions || !areLocationServicesEnabled -> {
                     Text(
                         text = "Location not available. Grant permissions and enable services.",
@@ -175,6 +200,7 @@ fun LoginScreen(
                         color = Color.Red
                     )
                 }
+
                 else -> { // Default "fetching" state
                     Text(
                         text = "Fetching live location...", // Changed text
@@ -214,9 +240,11 @@ fun LoginScreen(
             } else {
                 Button(
                     onClick = onLoginClick,
-                    modifier = Modifier.height(56.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(46.dp)
                 ) {
-                    Text("Login to Dashboard", fontSize = 20.sp)
+                    Text("Login to Dashboard", fontSize = 18.sp)
                 }
             }
 
