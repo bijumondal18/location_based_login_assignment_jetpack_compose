@@ -303,7 +303,11 @@ fun LoginScreen(
                             .align(Alignment.CenterHorizontally)
                     )
                     Spacer(modifier = Modifier.height(16.dp))
-                    Text(text = "Logging in...", fontSize = 18.sp)
+                    Text(
+                        text = "Logging in...", fontSize = 18.sp,
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                    )
                 } else {
                     val canAttemptLogin =
                         hasRequiredPermissions && areLocationServicesEnabled && currentLocation != null

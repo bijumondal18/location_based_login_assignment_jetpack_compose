@@ -67,7 +67,7 @@ class LocationMonitoringService : LifecycleService() { // Use LifecycleService f
                 .collect { locationData -> // <--- **CRITICAL CHANGE: Use collect directly**
                     if (locationData != null) {
                         // Check permissions again just in case they were revoked while service was running
-                        if (!PermissionUtils.hasAllRequiredPermissions(applicationContext)) {
+                        if (!PermissionUtils.hasAllRequiredLocationPermissions(applicationContext)) {
                             handleLocationError("Location permissions revoked.")
                             return@collect // Use return@collect for the lambda
                         }

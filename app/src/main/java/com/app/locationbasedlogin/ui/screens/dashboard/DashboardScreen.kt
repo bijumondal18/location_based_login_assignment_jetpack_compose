@@ -82,7 +82,10 @@ fun DashboardScreen(
                             .align(Alignment.CenterHorizontally)
                     )
                     Spacer(modifier = Modifier.height(16.dp))
-                    Text(text = "Logging out...", fontSize = 18.sp)
+                    Text(text = "Logging out...", fontSize = 18.sp,
+                        modifier = Modifier
+                            .align(Alignment.CenterHorizontally)
+                        )
                 } else {
                     CustomButton(
                         modifier = Modifier

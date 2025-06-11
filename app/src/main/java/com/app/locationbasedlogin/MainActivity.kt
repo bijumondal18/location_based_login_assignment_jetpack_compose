@@ -36,31 +36,40 @@ import com.app.locationbasedlogin.ui.screens.login.LoginScreen
 
 private const val TAG = "MainActivity"
 class MainActivity : ComponentActivity() {
-    // Single ActivityResultLauncher for all location permissions
+
     private lateinit var requestLocationPermissionsLauncher: androidx.activity.result.ActivityResultLauncher<Array<String>>
+    private lateinit var requestNotificationPermissionLauncher: androidx.activity.result.ActivityResultLauncher<String> // Launcher for notifications
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        // Initialize the launcher here, in onCreate, before setContent
+        // Initialize the location permissions launcher
         requestLocationPermissionsLauncher = registerForActivityResult(
             ActivityResultContracts.RequestMultiplePermissions()
         ) { permissions ->
-            val fineLocationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
-            val coarseLocationGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
-            val backgroundLocationGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                permissions[Manifest.permission.ACCESS_BACKGROUND_LOCATION] ?: false
-            } else true // Background location not relevant below Android 10
+            Log.d(TAG, "Location permission dialog result received: $permissions")
+            val allLocationPermissionsGranted = PermissionUtils.hasLocationPermissions(this)
 
-            val allGranted = PermissionUtils.hasAllRequiredPermissions(this) // Re-check all after result
-
-            if (allGranted) {
-                Log.d(TAG, "All required location permissions granted.")
+            if (allLocationPermissionsGranted) {
+                Log.d(TAG, "All required location permissions currently granted. Showing Snackbar.")
             } else {
-                Log.w(TAG, "Not all required location permissions granted. Fine: $fineLocationGranted, Coarse: $coarseLocationGranted, Background: $backgroundLocationGranted")
+                Log.w(TAG, "Not all required location permissions currently granted. Showing Snackbar.")
+            }
+            // ViewModel's checkPermissions will be triggered by the onResume observer
+        }
+
+        // Initialize the notification permissions launcher (for Android 13+)
+        requestNotificationPermissionLauncher = registerForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { isGranted: Boolean ->
+            if (isGranted) {
+                Log.d(TAG, "Notification permission granted.")
+            } else {
+                Log.w(TAG, "Notification permission denied.")
             }
         }
+
 
         setContent {
             LocationBasedLoginTheme {
@@ -69,11 +78,24 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     AppNavGraph(
-                        // Pass the launcher function down to the composables
                         onRequestLocationPermissions = {
-                            requestLocationPermissionsLauncher.launch(
-                                PermissionUtils.requiredPermissions.toTypedArray()
-                            )
+                            val permissionsToRequest = PermissionUtils.requiredLocationPermissions.toTypedArray()
+                            if (permissionsToRequest.isNotEmpty()) {
+                                Log.d(TAG, "Launching location permission dialog for: ${permissionsToRequest.joinToString()}")
+                                requestLocationPermissionsLauncher.launch(permissionsToRequest)
+                            } else {
+                                Log.w(TAG, "No location permissions to request according to PermissionsUtils.requiredLocationPermissions.")
+                            }
+                        },
+                        onRequestNotificationPermission = {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                if (!PermissionUtils.hasNotificationPermission(this)) {
+                                    Log.d(TAG, "Launching notification permission dialog.")
+                                    requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                } else {
+                                    Log.d(TAG, "Notification permission already granted.")
+                                }
+                            }
                         }
                     )
                 }

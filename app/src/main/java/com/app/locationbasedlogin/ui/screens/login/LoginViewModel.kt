@@ -66,7 +66,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun checkPermissions() {
-        _permissionStatus.value = PermissionUtils.hasAllRequiredPermissions(context)
+        _permissionStatus.value = PermissionUtils.hasAllRequiredLocationPermissions(context)
     }
 
     // This function starts collecting location updates continuously for the UI

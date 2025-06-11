@@ -12,8 +12,8 @@ import androidx.core.content.ContextCompat
 
 object PermissionUtils {
 
-    // Defines the list of permissions required by the app
-    val requiredPermissions: List<String> = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+    // Defines the list of location permissions required by the app
+    val requiredLocationPermissions: List<String> = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
         listOf(
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION,
@@ -50,10 +50,22 @@ object PermissionUtils {
         }
     }
 
-    // Checks if ALL required permissions for the app (foreground + background if Q+) are granted
-    fun hasAllRequiredPermissions(context: Context): Boolean {
-        return requiredPermissions.all {
+    // Checks if ALL required location permissions (foreground + background if Q+) are granted
+    fun hasAllRequiredLocationPermissions(context: Context): Boolean {
+        return requiredLocationPermissions.all {
             ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
+        }
+    }
+
+    // Checks if POST_NOTIFICATIONS permission is granted (for Android 13+)
+    fun hasNotificationPermission(context: Context): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            true // Not required for Android versions below TIRAMISU (API 33)
         }
     }
 }

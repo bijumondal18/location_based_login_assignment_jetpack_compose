@@ -3,8 +3,11 @@ package com.app.locationbasedlogin.ui.navigation
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.provider.Settings
+import android.util.Log
 import android.window.SplashScreen
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -17,6 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
@@ -40,18 +44,17 @@ import com.app.locationbasedlogin.utils.PermissionUtils
 
 @Composable
 fun AppNavGraph(
-    onRequestLocationPermissions: () -> Unit // Simplified to one launcher function
+    onRequestLocationPermissions: () -> Unit,
+    onRequestNotificationPermission: () -> Unit
 ) {
     val navController = rememberNavController()
     val context = LocalContext.current
 
-    // Observe permission changes and location service status
     var showAutoLogoutDialog by remember { mutableStateOf(false) }
 
     val authRepository = remember { AuthRepository(context) }
-    val isLoggedIn by authRepository.isLoggedIn.collectAsState(initial = true) // Assume true initially to avoid flicker
+    val isLoggedIn by authRepository.isLoggedIn.collectAsState(initial = true)
 
-    // Check if location services are enabled
     val locationManager =
         remember { context.getSystemService(Context.LOCATION_SERVICE) as android.location.LocationManager }
     var areLocationServicesEnabled by remember {
@@ -61,7 +64,6 @@ fun AppNavGraph(
         )
     }
 
-    // Lifecycle observer to re-check location services status when app comes to foreground
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -69,6 +71,13 @@ fun AppNavGraph(
                 areLocationServicesEnabled =
                     locationManager.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER) ||
                             locationManager.isProviderEnabled(android.location.LocationManager.NETWORK_PROVIDER)
+                // On resume, also check notification permission as it might have been changed externally
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    if (!PermissionUtils.hasNotificationPermission(context)) {
+                        // Optionally trigger notification permission request again if needed,
+                        // but usually it's better to guide the user to settings after initial denial.
+                    }
+                }
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -77,36 +86,49 @@ fun AppNavGraph(
         }
     }
 
+    // Trigger permission requests on app startup
+    LaunchedEffect(Unit) {
+        // Request location permissions first
+        if (!PermissionUtils.hasAllRequiredLocationPermissions(context)) {
+            onRequestLocationPermissions()
+        }
+
+        // Request notification permission for Android 13+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (!PermissionUtils.hasNotificationPermission(context)) {
+                onRequestNotificationPermission()
+            }
+        }
+    }
+
+
     LaunchedEffect(isLoggedIn, areLocationServicesEnabled) {
         if (!isLoggedIn) {
-            // User is no longer logged in (could be manual logout or auto-logout by service)
-            // Show dialog only if not due to manual logout and location services or permissions are an issue
-            val hasAllPermissions = PermissionUtils.hasAllRequiredPermissions(context)
+            val hasAllPermissions =
+                PermissionUtils.hasAllRequiredLocationPermissions(context) // Check location permissions only here for auto-logout logic
 
             if (!hasAllPermissions || !areLocationServicesEnabled) {
                 showAutoLogoutDialog = true
             }
-            // Navigate to login, ensure it's on top and back stack is clear to splash
             navController.navigate("login_route") {
                 popUpTo("splash_route") { inclusive = true }
             }
         }
     }
 
-
     if (showAutoLogoutDialog) {
         AlertDialog(
-            onDismissRequest = {  false },
+            onDismissRequest = { false },
             title = {
                 Text(
                     "Logged Out Automatically",
-                    style = MaterialTheme.typography.titleLarge
+                    style = MaterialTheme.typography.titleMedium
                 )
             },
             text = {
                 Text(
                     "You have been logged out because location services were disabled or necessary permissions were revoked.",
-                    style = MaterialTheme.typography.bodyLarge
+                    style = MaterialTheme.typography.bodyMedium
                 )
             },
             confirmButton = {
@@ -114,11 +136,12 @@ fun AppNavGraph(
                     text = "OK",
                     onClick = {
                         showAutoLogoutDialog = false
-                        // Optionally navigate to app settings
                         context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                             data = Uri.fromParts("package", context.packageName, null)
                         })
-                    })
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         )
     }
@@ -150,10 +173,10 @@ fun AppNavGraph(
             }
         }
         composable("login_route") {
-            val loginViewModel: LoginViewModel = viewModel() // ViewModel created here
+            val loginViewModel: LoginViewModel = viewModel()
             val isLoading by loginViewModel.isLoading.collectAsState()
             val loginMessage by loginViewModel.loginMessage.collectAsState()
-            val hasRequiredPermissions by loginViewModel.permissionStatus.collectAsState() // Observe VM's permission status
+            val hasRequiredLocationPermissions by loginViewModel.permissionStatus.collectAsState() // Renamed for clarity
 
             LaunchedEffect(loginViewModel) {
                 loginViewModel.navigateToDashboard.collect {
@@ -162,10 +185,6 @@ fun AppNavGraph(
                     }
                 }
             }
-
-            // Handled by MainActivity's launcher:
-            // var showPermissionRationaleDialog by remember { mutableStateOf(false) }
-            // LaunchedEffect(Unit) { loginViewModel.showPermissionRationaleDialog.collect { showPermissionRationaleDialog = true } }
 
             var showLocationSettingsDialog by remember { mutableStateOf(false) }
             LaunchedEffect(Unit) {
@@ -182,21 +201,25 @@ fun AppNavGraph(
                     title = { Text("Location Services Disabled") },
                     text = { Text("Please enable location services in your device settings to use this app.") },
                     confirmButton = {
-                        Button(onClick = {
-                            showLocationSettingsDialog = false
-                            loginViewModel.dismissLoginMessage()
-                            loginViewModel.openLocationSettings() // This opens settings via ViewModel
-                        }) {
-                            Text("Go to Settings")
-                        }
+                        CustomButton(
+                            text = "Go to Settings",
+                            onClick = {
+                                showLocationSettingsDialog = false
+                                loginViewModel.dismissLoginMessage()
+                                loginViewModel.openLocationSettings()
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     },
                     dismissButton = {
-                        Button(onClick = {
-                            showLocationSettingsDialog = false
-                            loginViewModel.dismissLoginMessage()
-                        }) {
-                            Text("Cancel")
-                        }
+                        CustomButton(
+                            text = "Cancel",
+                            onClick = {
+                                showLocationSettingsDialog = false
+                                loginViewModel.dismissLoginMessage()
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
                 )
             }
@@ -205,10 +228,14 @@ fun AppNavGraph(
                 viewModel = loginViewModel,
                 isLoading = isLoading,
                 loginMessage = loginMessage,
-                onLoginClick = { loginViewModel.onLoginClick() },
+                onLoginClick = {
+                    loginViewModel.onLoginClick()
+                },
                 onDismissMessage = { loginViewModel.dismissLoginMessage() },
-                hasRequiredPermissions = hasRequiredPermissions,
-                onRequestPermissions = onRequestLocationPermissions // Pass the launcher trigger
+                hasRequiredPermissions = hasRequiredLocationPermissions, // Pass the renamed variable
+                onRequestPermissions = {
+                    onRequestLocationPermissions() // Call the lambda passed from MainActivity
+                }
             )
         }
         composable("dashboard_route") {
@@ -226,7 +253,9 @@ fun AppNavGraph(
             DashboardScreen(
                 viewModel = dashboardViewModel,
                 isLoading = isLoading,
-                onLogoutClick = { dashboardViewModel.onLogoutClick() }
+                onLogoutClick = {
+                    dashboardViewModel.onLogoutClick()
+                }
             )
         }
     }

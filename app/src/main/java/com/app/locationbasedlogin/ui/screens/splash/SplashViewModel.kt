@@ -35,13 +35,13 @@ class SplashViewModel(application: Application) : AndroidViewModel(application) 
             delay(1500)
 
             val isLoggedIn = authRepository.isLoggedIn.first()
-            val hasAllPermissions = PermissionUtils.hasAllRequiredPermissions(context)
+            val hasAllPermissions = PermissionUtils.hasAllRequiredLocationPermissions(context)
             val lastKnownLocation = locationRepository.getLastKnownLocation()
 
             if (isLoggedIn && hasAllPermissions && lastKnownLocation != null) {
                 val isWithinOffice = LocationUtils.isWithinOfficePerimeter(
-                    userLat = lastKnownLocation.latitude?:0.0,
-                    userLon = lastKnownLocation.longitude?:0.0,
+                    userLat = lastKnownLocation.latitude,
+                    userLon = lastKnownLocation.longitude,
                     officeLat = Constants.OFFICE_LATLNG.latitude,
                     officeLon = Constants.OFFICE_LATLNG.longitude,
                     perimeter = Constants.OFFICE_PERIMETER_METERS
