@@ -3,51 +3,71 @@ package com.app.locationbasedlogin
 import android.Manifest
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
+import android.view.View
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.app.locationbasedlogin.ui.navigation.AppNavGraph
+import com.app.locationbasedlogin.ui.screens.login.LoginViewModel
 import com.app.locationbasedlogin.ui.theme.LocationBasedLoginTheme
 import com.app.locationbasedlogin.utils.PermissionUtils
+import androidx.lifecycle.viewmodel.compose.viewModel
+
+
+private const val TAG = "MainActivity"
 
 class MainActivity : ComponentActivity() {
 
-    private val requestLocationPermissionsLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestMultiplePermissions()
-    ) { permissions ->
-        val granted = permissions.entries.all { it.value }
-        if (granted) {
-            // All permissions granted, potentially retry logic in current screen's ViewModel
-            // Or if in login, allow login attempt
-        } else {
-            // Permissions denied, handle accordingly (e.g., show rationale again)
-        }
-    }
-
-    private val requestBackgroundLocationPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
-            // Background location granted
-        } else {
-            // Background location denied, handle accordingly
-        }
-    }
-
+    // Single ActivityResultLauncher for all location permissions
+    private lateinit var requestLocationPermissionsLauncher: ActivityResultLauncher<Array<String>>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        // Initialize the launcher here, in onCreate, before setContent
+        requestLocationPermissionsLauncher = registerForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions()
+        ) { permissions ->
+            val fineLocationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
+            val coarseLocationGranted =
+                permissions[Manifest.permission.ACCESS_COARSE_LOCATION] ?: false
+            val backgroundLocationGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                permissions[Manifest.permission.ACCESS_BACKGROUND_LOCATION] ?: false
+            } else true // Background location not relevant below Android 10
+
+            val allGranted =
+                PermissionUtils.hasAllRequiredPermissions(this) // Re-check all after result
+
+            if (allGranted) {
+                Log.d(TAG, "All required location permissions granted.")
+                // Using View-based Snackbar for quick feedback.
+                // In a pure Compose app, you'd use Scaffold + SnackbarHostState.
+            } else {
+                Log.w(
+                    TAG,
+                    "Not all required location permissions granted. Fine: $fineLocationGranted, Coarse: $coarseLocationGranted, Background: $backgroundLocationGranted"
+                )
+            }
+            // Trigger the ViewModel to re-check permissions, which will update the UI
+            // We can't directly call checkPermissions on a specific ViewModel instance here
+            // because the ViewModel is created within the Composable scope.
+            // This re-check will be handled by the LoginViewModel's onResume observer.
+        }
+
         setContent {
             LocationBasedLoginTheme {
                 Surface(
@@ -55,37 +75,15 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     AppNavGraph(
-                        requestLocationPermissions = ::requestAllLocationPermissions,
-                        requestBackgroundLocationPermission = ::requestBackgroundLocationPermission
+                        // Pass the launcher function down to the composables
+                        onRequestLocationPermissions = {
+                            requestLocationPermissionsLauncher.launch(
+                                PermissionUtils.requiredPermissions.toTypedArray()
+                            )
+                        },
                     )
                 }
             }
         }
     }
-
-    private fun requestAllLocationPermissions() {
-        val permissionsToRequest = mutableListOf<String>()
-        permissionsToRequest.addAll(PermissionUtils.locationPermissions)
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q &&
-            !PermissionUtils.hasBackgroundLocationPermission(this)) {
-            permissionsToRequest.add(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-        }
-
-        if (permissionsToRequest.isNotEmpty()) {
-            requestLocationPermissionsLauncher.launch(permissionsToRequest.toTypedArray())
-        }
-    }
-
-    private fun requestBackgroundLocationPermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_BACKGROUND_LOCATION)) {
-                // Show rationale for background location here (e.g., an AlertDialog)
-                // before launching the request.
-                // For this example, we'll directly launch it.
-            }
-            requestBackgroundLocationPermissionLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-        }
-    }
-
 }
