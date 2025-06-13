@@ -33,7 +33,7 @@ Before you begin, ensure you have the following installed:
 
 1.  **Clone the Repository:**
     ```bash
-    git clone [https://github.com/bijumondal18/location_based_login_assignment_jetpack_compose.git](https://github.com/bijumondal18/location_based_login_assignment_jetpack_compose.git)
+    git clone https://github.com/bijumondal18/location_based_login_assignment_jetpack_compose.git
     cd location_based_login_assignment_jetpack_compose
     ```
 
