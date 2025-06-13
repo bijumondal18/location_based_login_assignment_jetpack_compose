@@ -22,6 +22,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.app.ActivityCompat
 import com.app.locationbasedlogin.ui.navigation.AppNavGraph
 import com.app.locationbasedlogin.ui.screens.login.LoginViewModel
 import com.app.locationbasedlogin.ui.theme.LocationBasedLoginTheme
@@ -43,6 +44,16 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.POST_NOTIFICATIONS,
+            ),
+            0
+        )
 
         // Initialize the location permissions launcher
         requestLocationPermissionsLauncher = registerForActivityResult(

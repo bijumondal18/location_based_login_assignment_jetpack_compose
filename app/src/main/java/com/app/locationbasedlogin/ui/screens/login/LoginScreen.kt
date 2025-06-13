@@ -320,7 +320,7 @@ fun LoginScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         CustomButton(
-                            text = "Request Permissions", onClick = { onRequestPermissions }
+                            text = "Request Permissions", onClick = { onRequestPermissions() }
                         )
 
                         if (!areLocationServicesEnabled) {
