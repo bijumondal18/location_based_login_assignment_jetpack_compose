@@ -18,7 +18,7 @@ An Android application built with Jetpack Compose that facilitates secure office
 *(You can add screenshots of your app here. For example:)*
 | Login Screen (Initial) | Login Screen (Location Updated) | Login Screen (Permission Denied) |
 | :----------------------: | :-----------------------------: | :--------------------------------: |
-| ![Login Screen 1](screenshots/login_initial.png) | ![Login Screen 2](screenshots/login_updated.png) | ![Login Screen 3](screenshots/login_permission_denied.png) |
+| ![screenshot_login](screenshots/screenshot_login.png) | ![screenshot_dashboard](screenshots/screenshot_dashboard.png) | ![Login Screen 3](screenshots/login_permission_denied.png) |
 
 ## 🛠️ Prerequisites
 
